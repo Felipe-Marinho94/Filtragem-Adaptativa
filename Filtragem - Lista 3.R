@@ -9,7 +9,7 @@ library(plotly)
 library(pracma)
 library(MASS)
 
-#GeraÁ„o dos dados
+#Gera√ß√£o dos dados
 x = rnorm(301, mean = 0, sd = 1)
 g = rep(0, 300)
 
@@ -20,44 +20,44 @@ for (i in 1:length(x)-1) {
 dados = cbind(x[-length(x)], g)
 dados = as.data.frame(dados)
 
-#RepresentaÁ„o gr·fica dos sinais
+#Representa√ß√£o gr√°fica dos sinais
 figura_ruido = plot_ly(data = dados, x = 1:300, y = dados[, 1], type = "scatter", marker = list(size = 10, color = "rgba(125, 180, 240, .9)", line = list(color = "rgba(0, 152, 0, .8)", width = 2)), name = NULL) 
-figura_ruido = figura_ruido %>% layout(xaxis = list(title = "Tempo discreto (k)", titlefont = list(size = 22), tickfont = list(size = 22)), yaxis = list(title = "ObservaÁ„o", titlefont = list(size = 22), tickfont = list(size = 22))) %>% add_lines(x = 1:300, y = dados[, 1], name = 'RuÌdo Gaussiano', line = list(width = 4))
+figura_ruido = figura_ruido %>% layout(xaxis = list(title = "Tempo discreto (k)", titlefont = list(size = 22), tickfont = list(size = 22)), yaxis = list(title = "Observa√ß√£o", titlefont = list(size = 22), tickfont = list(size = 22))) %>% add_lines(x = 1:300, y = dados[, 1], name = 'Ru√≠do Gaussiano', line = list(width = 4))
 figura_entrada = plot_ly(data = dados, x = 1:300, y = dados[, 2], type = "scatter", name = "Entrada do Filtro", line = list(color = "red", width = 4), marker = list(size = 10, color = "rgba(240, 18, 24, .9)", line = list(color = "rgba(152, 0, 0, .8)", width = 2), symbol = 'x'))
-figura_entrada = figura_entrada %>% layout(xaxis = list(title = "Tempo discreto (k)", titlefont = list(size = 22), tickfont = list(size = 22)), yaxis = list(title = "ObservaÁ„o", titlefont = list(size = 22), tickfont = list(size = 22)))
+figura_entrada = figura_entrada %>% layout(xaxis = list(title = "Tempo discreto (k)", titlefont = list(size = 22), tickfont = list(size = 22)), yaxis = list(title = "Observa√ß√£o", titlefont = list(size = 22), tickfont = list(size = 22)))
 
 subplot(figura_ruido, figura_entrada, nrows = 2, titleX = T, titleY = T, shareX = T)
 
-#AplicaÁao dos algoritmos
-d = x[-1]  #Problema de equalizaÁ„o o desejado deve ser o sinal anterior a passagem do canal
+#Aplica√ßao dos algoritmos
+d = x[-1]  #Problema de equaliza√ß√£o o desejado deve ser o sinal anterior a passagem do canal
 R = rbind(c(3.56, -1.6), c(-1.6, 3.56))
 P = c(1, 1)
 
-#FunÁ„o para a determinaÁ„o do MSE
-MSE = function(R, P, vari‚ncia, w){
-  return(vari‚ncia - 2 * dot(w, P) + t(w) %*% R %*% w)
+#Fun√ß√£o para a determina√ß√£o do MSE
+MSE = function(R, P, vari√¢ncia, w){
+  return(vari√¢ncia - 2 * dot(w, P) + t(w) %*% R %*% w)
 }
 
-#ImplementaÁ„o dos algoritmos recursivos do tipo LMS
-#Gradiente DeterminÌstico
+#Implementa√ß√£o dos algoritmos recursivos do tipo LMS
+#Gradiente Determin√≠stico
 Grad_Det = function(N, R, P, mu, x, d, ordem){
   
-  #InicializaÁ„o da matriz de par‚metros e do vetor de erros quadr·ticos
+  #Inicializa√ß√£o da matriz de par√¢metros e do vetor de erros quadr√°ticos
   W = matrix(0, nrow = ordem, ncol = N)
   erro = rep(0, N)
 
-  #InicializaÁ„o do vetor de par‚metros
+  #Inicializa√ß√£o do vetor de par√¢metros
   w0 = rep(0, ordem)
   w = w0
   
-  #LaÁo de iteraÁ„o
+  #La√ßo de itera√ß√£o
   for (k in 1:N) {
     
-    #DeterminaÁ„o do erro
+    #Determina√ß√£o do erro
     e = d[k+(ordem-1)] - dot(x[k:(k+(ordem-1))], w)
     erro[k] = MSE(R, P, 1, w)
     
-    #AtualizaÁ„o
+    #Atualiza√ß√£o
     w = w - (2 * mu) * (-P + (R %*% w))
     
     #Armazena os coeficientes
@@ -73,22 +73,22 @@ Grad_Det = function(N, R, P, mu, x, d, ordem){
 #Algoritmo de Newton
 Newton = function(N, R, P, mu, x, d, ordem){
   
-  #InicializaÁ„o da matriz de par‚metros e do vetor de erros quadr·ticos
+  #Inicializa√ß√£o da matriz de par√¢metros e do vetor de erros quadr√°ticos
   W = matrix(0, nrow = ordem, ncol = N)
   erro = rep(0, N)
   
-  #InicializaÁ„o do vetor de par‚metros
+  #Inicializa√ß√£o do vetor de par√¢metros
   w0 = rep(0, ordem)
   w = w0
   
-  #LaÁo de iteraÁao
+  #La√ßo de itera√ßao
   for (k in 1:N) {
     
-    #DeterminaÁ„o do erro
+    #Determina√ß√£o do erro
     e = d[k+(ordem-1)] - dot(x[k:(k+(ordem-1))], w)
     erro[k] = MSE(R, P, 1, w)
     
-    #AtualizaÁ„o
+    #Atualiza√ß√£o
     w = w - mu * (w - (ginv(R) %*% P))
     
     #Armazena os coeficientes
@@ -105,22 +105,22 @@ Newton = function(N, R, P, mu, x, d, ordem){
 #Algoritmo LMS
 LMS = function(N, mu, x, d, ordem){
   
-  #InicializaÁ„o da matriz de par‚metros e do vetor de erros quadr·ticos
+  #Inicializa√ß√£o da matriz de par√¢metros e do vetor de erros quadr√°ticos
   W = matrix(0, nrow = ordem, ncol = N)
   erro = rep(0, N)
   
-  #InicializaÁ„o do vetor de par‚metros
+  #Inicializa√ß√£o do vetor de par√¢metros
   w0 = rep(0, ordem)
   w = w0
   
-  #LaÁo de iteraÁ„o
+  #La√ßo de itera√ß√£o
   for (k in 1:N) {
     
-    #DeterminaÁao do erro
+    #Determina√ßao do erro
     e = d[k+(ordem-1)] - dot(x[k:(k+(ordem-1))], w)
     erro[k] = MSE(R, P, 1, w)
     
-    #AtualizaÁ„o
+    #Atualiza√ß√£o
     w = w + (2 * mu * e) * x[k:(k+(ordem-1))] 
     
     #Armazena os coeficientes
@@ -136,22 +136,22 @@ LMS = function(N, mu, x, d, ordem){
 #Algortimo LMS normalizado
 LMS_normalizado = function(N, mu, gama, x, d, ordem){
   
-  #InicializaÁ„o da matriz de par‚metros e do vetor de erros quadr·ticos
+  #Inicializa√ß√£o da matriz de par√¢metros e do vetor de erros quadr√°ticos
   W = matrix(0, nrow = ordem, ncol = N)
   erro = rep(0, N)
   
-  #InicializaÁ„o do vetor de par‚metros
+  #Inicializa√ß√£o do vetor de par√¢metros
   w0 = rep(0, ordem)
   w = w0
   
-  #LaÁo de iteraÁ„o
+  #La√ßo de itera√ß√£o
   for (k in 1:N) {
     
-    #DeterminaÁao do erro
+    #Determina√ßao do erro
     e = d[k+(ordem-1)] - dot(x[k:(k+(ordem-1))], w)
     erro[k] = MSE(R, P, 1, w)
     
-    #AtualizaÁ„o
+    #Atualiza√ß√£o
     w = w + (mu * e ) * ((x[k:(k+(ordem-1))])/(gama + dot(x[k:(k+(ordem-1))], x[k:(k+(ordem-1))]))) 
     
     #Armazena os coeficientes
@@ -171,34 +171,34 @@ resultado_newton = Newton(200, R, P, 0.2, g, d, 2)
 resultado_LMS = LMS(200, 0.1, g, d, 2)
 resultado_LMS_normalizado = LMS_normalizado(200, 0.1, 0.01, g, d, 2)
 
-#RepresentaÁ„o gr·fica
-#Gradiente DeterminÌstico
+#Representa√ß√£o gr√°fica
+#Gradiente Determin√≠stico
 erro = data.frame(resultado_grad_det$erro)
 figura_erro_grad = plot_ly(data = erro, x = 1:200, y = erro[, 1], type = "scatter", marker = list(size = 10, color = "rgba(125, 180, 240, .9)", line = list(color = "rgba(0, 152, 0, .8)", width = 2)), name = NULL) 
-figura_erro_grad = figura_erro_grad %>% layout(title = "MSE vs. IteraÁ„o", xaxis = list(title = "IteraÁ„o", titlefont = list(size = 22), tickfont = list(size = 22)), yaxis = list(title = "MSE", titlefont = list(size = 22), tickfont = list(size = 22))) %>% add_lines(x = 1:200, y = erro[,1], name = "Gradiente DeterminÌstico", line = list(width = 4))
+figura_erro_grad = figura_erro_grad %>% layout(title = "MSE vs. Itera√ß√£o", xaxis = list(title = "Itera√ß√£o", titlefont = list(size = 22), tickfont = list(size = 22)), yaxis = list(title = "MSE", titlefont = list(size = 22), tickfont = list(size = 22))) %>% add_lines(x = 1:200, y = erro[,1], name = "Gradiente Determin√≠stico", line = list(width = 4))
 figura_erro_grad
 
 #Newton
 erro = data.frame(resultado_newton$erro)
 figura_erro_newton = plot_ly(data = erro, x = 1:200, y = erro[, 1], type = "scatter", marker = list(size = 10, color = "rgba(240, 180, 140, .9)", line = list(color = "rgba(250, 0, 0, .8)", width = 2), symbol = 'x'), name = NULL) 
-figura_erro_newton = figura_erro_newton %>% layout(title = "MSE vs. IteraÁ„o", xaxis = list(title = "IteraÁ„o", titlefont = list(size = 22), tickfont = list(size = 22)), yaxis = list(title = "MSE", titlefont = list(size = 22), tickfont = list(size = 22))) %>% add_lines(x = 1:200, y = erro[,1], name = "Newton", line = list(width = 4, color = "red"))
+figura_erro_newton = figura_erro_newton %>% layout(title = "MSE vs. Itera√ß√£o", xaxis = list(title = "Itera√ß√£o", titlefont = list(size = 22), tickfont = list(size = 22)), yaxis = list(title = "MSE", titlefont = list(size = 22), tickfont = list(size = 22))) %>% add_lines(x = 1:200, y = erro[,1], name = "Newton", line = list(width = 4, color = "red"))
 figura_erro_newton
 
 #LMS
 erro = data.frame(resultado_LMS$erro)
 figura_erro_LMS = plot_ly(data = erro, x = 1:200, y = erro[, 1], type = "scatter", marker = list(size = 10, color = "rgba(140, 180, 240, .9)", line = list(color = "rgba(0, 0, 250, .8)", width = 2), symbol = 'cross'), name = NULL) 
-figura_erro_LMS = figura_erro_LMS %>% layout(title = "MSE vs. IteraÁ„o", xaxis = list(title = "IteraÁ„o", titlefont = list(size = 22), tickfont = list(size = 22)), yaxis = list(title = "MSE", titlefont = list(size = 22), tickfont = list(size = 22))) %>% add_lines(x = 1:200, y = erro[,1], name = "LMS", line = list(width = 4, color = "blue"))
+figura_erro_LMS = figura_erro_LMS %>% layout(title = "MSE vs. Itera√ß√£o", xaxis = list(title = "Itera√ß√£o", titlefont = list(size = 22), tickfont = list(size = 22)), yaxis = list(title = "MSE", titlefont = list(size = 22), tickfont = list(size = 22))) %>% add_lines(x = 1:200, y = erro[,1], name = "LMS", line = list(width = 4, color = "blue"))
 figura_erro_LMS
 
 #LMS normamlizado
 erro = data.frame(resultado_LMS_normalizado$erro)
 figura_erro_LMS_normalizado = plot_ly(data = erro, x = 1:200, y = erro[, 1], type = "scatter", marker = list(size = 10, color = "rgba(40, 80, 40, .9)", line = list(color = "rgba(0, 0, 0, .8)", width = 2), symbol = 'triangle-down'), name = NULL) 
-figura_erro_LMS_normalizado = figura_erro_LMS_normalizado %>% layout(title = "MSE vs. IteraÁ„o", xaxis = list(title = "IteraÁ„o", titlefont = list(size = 22), tickfont = list(size = 22)), yaxis = list(title = "MSE", titlefont = list(size = 22), tickfont = list(size = 22))) %>% add_lines(x = 1:200, y = erro[,1], name = "LMS normalizado", line = list(width = 4, color = "black"))
+figura_erro_LMS_normalizado = figura_erro_LMS_normalizado %>% layout(title = "MSE vs. Itera√ß√£o", xaxis = list(title = "Itera√ß√£o", titlefont = list(size = 22), tickfont = list(size = 22)), yaxis = list(title = "MSE", titlefont = list(size = 22), tickfont = list(size = 22))) %>% add_lines(x = 1:200, y = erro[,1], name = "LMS normalizado", line = list(width = 4, color = "black"))
 figura_erro_LMS_normalizado
 
 subplot(figura_erro_grad, figura_erro_newton, figura_erro_LMS, figura_erro_LMS_normalizado, shareX = T, titleX = T, titleY = T, nrows = 2)
 
-#Curvas de nÌvel
+#Curvas de n√≠vel
 w_1 = seq(-50, 50)
 w_2 = seq(-50,50)
 z = matrix(0, nrow = 101, ncol = 101)
@@ -213,8 +213,8 @@ par(mfrow = c(2,2))
 w_opt = ginv(R) %*% P
 cols = hcl.colors(10, "YlOrRd")
 
-#Gradiente DeterminÌstico
-contour(w_1, w_2, z, main = "Gradiente DeterminÌstico", xlab = "w1", ylab = "w2", col = cols)
+#Gradiente Determin√≠stico
+contour(w_1, w_2, z, main = "Gradiente Determin√≠stico", xlab = "w1", ylab = "w2", col = cols)
 points(x = w_opt[1], y = w_opt[2], cex = 1.5, pch = 19, col = "black")
 points(x = resultado_grad_det$W[1,], y = resultado_grad_det$W[2,], cex = 1.5 ,col = "red")
 
@@ -233,7 +233,7 @@ contour(w_1, w_2, z, main = "Algoritmo LMS Normalizado", xlab = "w1", ylab = "w2
 points(x = w_opt[1], y = w_opt[2], cex = 1.5, pch = 19, col = "black")
 points(x = resultado_LMS$W[1,], y = resultado_LMS$W[2,], cex = 1.5 ,col = "red")
 
-#N˙mero de condicionamento
+#N√∫mero de condicionamento
 kappa(R)
 
 #teste
@@ -245,3 +245,61 @@ e
 x[5:6]
 w
 x[5:6]/(0.01 + dot(x[5:6], x[5:6]))
+
+#####################################################
+#Problema 5
+#Gera√ß√£o da entrada
+x_ruido = rnorm(1011, mean = 0, sd = 1)
+ruido_med = rnorm(1011, mean = 0, sd = sqrt(0.001))
+
+#considerando influ√™ncia aditiva do ru√≠do de medida sobre a entrada
+x_entrada = x_ruido + ruido_med
+
+#Obten√ß√£o do sinal desejado com base na fun√ß√£o de transfer√™ncia
+y = rep(0, 1000)
+for (k in 12:length(x_entrada)) {
+  y[k-11] = sum(x_entrada[k-11:k])
+}
+
+#Representa√ß√£o gr√°fica dos sinais de entrada e desejado
+par(mfrow = c(2, 1))
+plot(x = 1:1011, y = x_entrada, type = "l", lwd = 2, col = "Darkred", xlab = "Tempo discreto (k)", ylab = "Observa√ß√µes", main = "Sinal de entrada do filtro")
+plot(x = 1:1000, y = y, type = "l", lwd = 2, col = "Darkblue", xlab = "Tempo discreto (k)", ylab = "Observa√ß√µes", main = "Sinal de sa√≠da do sistema")
+
+#Executando o algoritmo LMS para diferentes valores de passo de aprendizagem
+R = (x_entrada %*% t(x_entrada))[1:11, 1:11]
+R = R/(length(x_entrada) - 1)
+
+P = ccf(x_entrada[12: length(x_entrada)], y)
+P = P$acf[25:35, 1, 1]
+
+mu_1 = eigen(R)$value[which.max(eigen(R)$value)]/2
+mu_2 = eigen(R)$value[which.max(eigen(R)$value)]/10
+mu_3 = eigen(R)$value[which.max(eigen(R)$value)]/50
+
+resultado_LMS_mu_1 = LMS(900, mu_1, x_entrada, y, 11)
+resultado_LMS_mu_2 = LMS(900, mu_2, x_entrada, y, 11)
+resultado_LMS_mu_3 = LMS(900, mu_3, x_entrada, y, 11)
+
+par(mfrow = c(2, 2))
+plot(x = 1:900, y = resultado_LMS_mu_1$erro, type = "l", lwd = 2.5, col = "Darkred", xlab = "Itera√ß√£o", ylab = "MSE", main = "MSE x Itera√ß√µes para mu_m√°x/2")
+plot(x = 1:900, y = resultado_LMS_mu_2$erro, type = "l", lwd = 2.5, col = "Darkblue", xlab = "Itera√ß√£o", ylab = "MSE", main = "MSE x Itera√ß√µes para mu_m√°x/10")
+plot(x = 1:900, y = resultado_LMS_mu_1$erro, type = "l", lwd = 2.5, col = "orange", xlab = "Itera√ß√£o", ylab = "MSE", main = "MSE x Itera√ß√µes para mu_m√°x/50")
+resultado_LMS_mu_2$W
+
+#Determina√ß√£o do Desajuste (Misadjustment)
+Misadjustment = function(R, mu){
+  return((mu * sum(diag(R)))/(1- (mu * sum(diag(R)))))
+}
+
+#Desajuste Emp√≠rico
+resultado_LMS_mu_1$erro[900]
+resultado_LMS_mu_2$erro[900]
+resultado_LMS_mu_3$erro[900]
+
+#Desajuste Te√≥rico
+M_mu_1 = Misadjustment(R, mu_1)
+M_mu_2 = Misadjustment(R, mu_2)
+M_mu_3 = Misadjustment(R, mu_3)
+
+
